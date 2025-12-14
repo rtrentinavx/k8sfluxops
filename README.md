@@ -25,9 +25,10 @@ GitOps repository for managing Kubernetes infrastructure using Flux v2.
 │                       │  │Grafana  │ │Velero   │ │ Hubble UI   │ │  │
 │                       │  │         │ │Backups  │ │ (Cilium)    │ │  │
 │                       │  └─────────┘ └─────────┘ └─────────────┘ │  │
-│                       │  ┌─────────────────────────────────────┐ │  │
-│                       │  │         Kube-ops-view               │ │  │
-│                       │  └─────────────────────────────────────┘ │  │
+│                       │  ┌─────────┐ ┌─────────────────────────┐ │  │
+│                       │  │Gatekeeper│ │     Kube-ops-view      │ │  │
+│                       │  │(OPA)    │ │                         │ │  │
+│                       │  └─────────┘ └─────────────────────────┘ │  │
 │                       └──────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────────────┘
 ```
@@ -40,8 +41,11 @@ k8sfluxops/
 │   └── kustomization.yaml
 ├── clusters/                # Cluster-specific configurations
 │   └── gke/
-│       └── kustomization.yaml
+│       ├── kustomization.yaml
+│       └── gatekeeper-policies.yaml
 └── infrastructure/          # Infrastructure components
+    ├── gatekeeper/          # OPA Gatekeeper + Policy Manager UI
+    ├── gatekeeper-policies/ # Constraint Templates
     ├── grafana/             # Metrics visualization (GCP Monitoring)
     ├── hubble/              # Network flow visualization (Cilium)
     ├── kube-ops-view/       # Cluster visualization
@@ -67,6 +71,7 @@ k8sfluxops/
 | Hubble UI | http://34.73.64.220 | - | Network flow visibility |
 | Traefik Dashboard | http://34.73.190.38:9000/dashboard/ | - | Ingress management |
 | Nginx (via Traefik) | http://34.73.190.38 | - | Backend demo |
+| **Gatekeeper Policy Manager** | http://34.139.100.229 | - | Admission policy visualization |
 
 ## ⚙️ GKE Cluster Features
 
@@ -85,6 +90,24 @@ k8sfluxops/
   - IngressRoute CRD support
   - Kubernetes Ingress support
 
+### Policy & Security
+- **OPA Gatekeeper** - Admission controller for policy enforcement
+  - Constraint Templates for reusable policies
+  - Audit mode for compliance checking
+  - Mutation support enabled
+- **Gatekeeper Policy Manager** - Web UI for policy visualization
+  - View constraint templates
+  - Monitor violations
+  - Audit cluster compliance
+
+### Constraint Templates Installed
+| Template | Purpose |
+|----------|---------|
+| `K8sRequiredLabels` | Require specific labels on resources |
+| `K8sBlockPrivileged` | Block privileged containers |
+| `K8sContainerLimits` | Require CPU/memory limits |
+| `K8sBlockLatestTag` | Block `:latest` image tags |
+
 ### Observability
 - **Grafana** - Metrics visualization with Google Cloud Monitoring datasource
 - **Hubble UI** - Network flow visualization for Dataplane V2 (Cilium)
@@ -93,7 +116,7 @@ k8sfluxops/
 ### Cost & Resource Management
 - **Kubecost** - Kubernetes cost monitoring and optimization
 - **VPA** - Vertical Pod Autoscaler (recommendation mode)
-- **HPA** - Horizontal Pod Autoscalers for Online Boutique
+- **HPA** - Horizontal Pod Autoscalers for Online Boutique and Nginx
 
 ### Backup & Disaster Recovery
 - **Velero** - Backup and restore with GCS backend
@@ -105,7 +128,7 @@ k8sfluxops/
 
 ### Demo Applications
 - **Online Boutique** - Google's microservices demo (10 services)
-- **Nginx** - Simple web server behind Traefik
+- **Nginx** - Simple web server behind Traefik (with HPA)
 
 ## 🔧 Prerequisites
 
@@ -156,8 +179,16 @@ Visualize network flows between pods:
 - Protocol breakdown
 - Namespace filtering
 
+### Gatekeeper Policy Manager
+View admission policies and violations:
+- Constraint Templates
+- Active Constraints
+- Cluster-wide violations
+- Compliance status
+
 ## 🔐 Security
 
+- **OPA Gatekeeper** for admission control policies
 - **Workload Identity** enabled for Velero and Grafana
 - **mTLS** for Hubble relay connections
 - Services use ClusterIP where possible
@@ -187,6 +218,22 @@ flux suspend kustomization <name>
 
 # Resume a kustomization
 flux resume kustomization <name>
+```
+
+## 🛡️ Gatekeeper Commands
+
+```bash
+# List constraint templates
+kubectl get constrainttemplates
+
+# List constraints
+kubectl get constraints
+
+# Check violations
+kubectl get constraints -o json | jq '.items[].status.violations'
+
+# Audit all resources
+kubectl get k8srequiredlabels -o yaml
 ```
 
 ## 📄 License
