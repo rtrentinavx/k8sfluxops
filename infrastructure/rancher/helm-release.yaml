@@ -1,0 +1,74 @@
+apiVersion: helm.toolkit.fluxcd.io/v2beta2
+kind: HelmRelease
+metadata:
+  name: rancher
+  namespace: cattle-system
+spec:
+  interval: 10m
+  targetNamespace: cattle-system
+  
+  chart:
+    spec:
+      chart: rancher
+      sourceRef:
+        kind: HelmRepository
+        name: rancher-stable
+        namespace: flux-system
+      interval: 1m
+  
+  # Wait for HelmRelease to complete before continuing
+  wait: true
+  waitForJobsTimeout: 5m
+  
+  # Helm values for Rancher
+  values:
+    # Hostname for Rancher - change this to your domain
+    hostname: rancher.35.231.139.225.nip.io
+    
+    # Rancher version
+    rancherImageTag: v2.8.0
+    
+    # Number of replicas
+    replicas: 1
+    
+    # Resource limits
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 1Gi
+      requests:
+        cpu: 500m
+        memory: 512Mi
+    
+    # Ingress configuration
+    ingress:
+      enabled: true
+      includeDefaultExtraAnnotations: true
+      extraAnnotations:
+        cert-manager.io/issuer: "letsencrypt-prod"
+      tls:
+        source: "rancher"
+    
+    # TLS configuration - generate self-signed cert
+    privateCA: true
+    
+    # Global settings
+    global:
+      cattle:
+        psp:
+          enabled: false
+        
+        # Telemetry
+        telemetry: false
+    
+    # RBAC
+    rbac:
+      create: true
+    
+    # Service Account
+    serviceAccount:
+      create: true
+    
+    # Additional environment variables
+    env:
+      CATTLE_TLS_MIN_VERSION: "1.2"
