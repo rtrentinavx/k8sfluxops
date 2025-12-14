@@ -1,0 +1,21 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: gatekeeper-policies
+  namespace: flux-system
+spec:
+  interval: 10m
+  path: ./infrastructure/gatekeeper-policies
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: k8sfluxops
+  dependsOn:
+    - name: infrastructure
+  healthChecks:
+    - apiVersion: templates.gatekeeper.sh/v1
+      kind: ConstraintTemplate
+      name: k8srequiredlabels
+    - apiVersion: templates.gatekeeper.sh/v1
+      kind: ConstraintTemplate
+      name: k8sblockprivileged
