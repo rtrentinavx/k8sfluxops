@@ -16,6 +16,9 @@ spec:
   values:
     mode: deployment
     
+    image:
+      repository: otel/opentelemetry-collector-contrib
+    
     replicaCount: 1
     
     resources:
@@ -76,9 +79,6 @@ spec:
             receivers: [otlp]
             processors: [memory_limiter, batch]
             exporters: [debug]
-    
-    service:
-      type: ClusterIP
     
     ports:
       otlp:
