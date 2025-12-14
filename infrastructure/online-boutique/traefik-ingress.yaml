@@ -1,0 +1,29 @@
+# Traefik IngressRoute for Online Boutique
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: online-boutique
+  namespace: online-boutique
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: PathPrefix(`/boutique`) || PathPrefix(`/_healthz`) || PathPrefix(`/static`) || PathPrefix(`/product`) || PathPrefix(`/cart`) || PathPrefix(`/setCurrency`) || PathPrefix(`/logout`) 
+      kind: Rule
+      middlewares:
+        - name: boutique-stripprefix
+          namespace: online-boutique
+      services:
+        - name: frontend
+          port: 80
+---
+# Middleware to strip /boutique prefix
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: boutique-stripprefix
+  namespace: online-boutique
+spec:
+  stripPrefix:
+    prefixes:
+      - /boutique

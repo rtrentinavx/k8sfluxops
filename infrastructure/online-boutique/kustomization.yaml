@@ -7,3 +7,4 @@ resources:
   - frontend-lb.yaml
   - hpa.yaml
   - vpa.yaml
+  - traefik-ingress.yaml

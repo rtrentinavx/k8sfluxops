@@ -1,3 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-otel-config
+  namespace: nginx
+data:
+  opentelemetry_module.conf: |
+    NginxModuleEnabled ON;
+    NginxModuleOtelSpanExporter otlp;
+    NginxModuleOtelExporterEndpoint opentelemetry-collector.observability:4317;
+    NginxModuleServiceName nginx;
+    NginxModuleServiceNamespace nginx;
+    NginxModuleServiceInstanceId nginx-pod;
+    NginxModuleResolveBackends ON;
+    NginxModuleTraceAsError ON;
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -15,12 +31,34 @@ spec:
       labels:
         app: nginx
     spec:
+      initContainers:
+        - name: otel-agent
+          image: docker.io/open-telemetry/opentelemetry-webserver-sdk:latest
+          command: ["cp", "-r", "/opt/opentelemetry/.", "/opt/otel"]
+          volumeMounts:
+            - name: otel-agent
+              mountPath: /opt/otel
       containers:
         - name: nginx
-          image: nginx:alpine
+          image: nginx:1.26
           ports:
             - containerPort: 80
               name: http
+          env:
+            - name: LD_LIBRARY_PATH
+              value: "/opt/otel/sdk_lib/lib"
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://opentelemetry-collector.observability:4317"
+            - name: OTEL_SERVICE_NAME
+              value: "nginx"
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: "service.namespace=nginx,deployment.environment=production"
+          volumeMounts:
+            - name: otel-agent
+              mountPath: /opt/otel
+            - name: otel-config
+              mountPath: /opt/otel/conf/opentelemetry_module.conf
+              subPath: opentelemetry_module.conf
           resources:
             requests:
               cpu: 50m
@@ -28,6 +66,24 @@ spec:
             limits:
               cpu: 200m
               memory: 128Mi
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 5
+      volumes:
+        - name: otel-agent
+          emptyDir: {}
+        - name: otel-config
+          configMap:
+            name: nginx-otel-config
 ---
 apiVersion: v1
 kind: Service

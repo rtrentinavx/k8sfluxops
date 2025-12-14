@@ -30,3 +30,23 @@ spec:
                 workload: "user"
       target:
         kind: Deployment
+    # Enable OpenTelemetry tracing - add OTEL env vars to all containers
+    - patch: |
+        apiVersion: apps/v1
+        kind: Deployment
+        metadata:
+          name: all
+        spec:
+          template:
+            spec:
+              containers:
+                - name: server
+                  env:
+                    - name: OTEL_EXPORTER_OTLP_ENDPOINT
+                      value: "http://opentelemetry-collector.observability.svc.cluster.local:4317"
+                    - name: OTEL_SERVICE_NAME
+                      valueFrom:
+                        fieldRef:
+                          fieldPath: metadata.labels['app']
+      target:
+        kind: Deployment
