@@ -25,10 +25,13 @@ GitOps repository for managing Kubernetes infrastructure using Flux v2.
 │                       │  │Grafana  │ │Velero   │ │ Hubble UI   │ │  │
 │                       │  │         │ │Backups  │ │ (Cilium)    │ │  │
 │                       │  └─────────┘ └─────────┘ └─────────────┘ │  │
-│                       │  ┌─────────┐ ┌─────────────────────────┐ │  │
-│                       │  │Gatekeeper│ │     Kube-ops-view      │ │  │
-│                       │  │(OPA)    │ │                         │ │  │
-│                       │  └─────────┘ └─────────────────────────┘ │  │
+│                       │  ┌─────────┐ ┌─────────┐ ┌─────────────┐ │  │
+│                       │  │Gatekeeper│ │ Jaeger │ │   OTel      │ │  │
+│                       │  │(OPA)    │ │Tracing │ │ Collector   │ │  │
+│                       │  └─────────┘ └─────────┘ └─────────────┘ │  │
+│                       │  ┌─────────────────────────────────────┐ │  │
+│                       │  │         Kube-ops-view               │ │  │
+│                       │  └─────────────────────────────────────┘ │  │
 │                       └──────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────────────┘
 ```
@@ -48,6 +51,7 @@ k8sfluxops/
     ├── gatekeeper-policies/ # Constraint Templates
     ├── grafana/             # Metrics visualization (GCP Monitoring)
     ├── hubble/              # Network flow visualization (Cilium)
+    ├── jaeger/              # Jaeger + OpenTelemetry Collector
     ├── kube-ops-view/       # Cluster visualization
     ├── kubecost/            # Cost monitoring
     ├── nginx/               # Nginx behind Traefik
@@ -71,7 +75,8 @@ k8sfluxops/
 | Hubble UI | http://34.73.64.220 | - | Network flow visibility |
 | Traefik Dashboard | http://34.73.190.38:9000/dashboard/ | - | Ingress management |
 | Nginx (via Traefik) | http://34.73.190.38 | - | Backend demo |
-| **Gatekeeper Policy Manager** | http://34.139.100.229 | - | Admission policy visualization |
+| Gatekeeper Policy Manager | http://34.139.100.229 | - | Admission policy visualization |
+| **Jaeger UI** | http://35.237.53.70 | - | Distributed tracing |
 
 ## ⚙️ GKE Cluster Features
 
@@ -90,15 +95,29 @@ k8sfluxops/
   - IngressRoute CRD support
   - Kubernetes Ingress support
 
+### Distributed Tracing
+- **Jaeger** - Distributed tracing backend and UI
+  - All-in-one deployment with in-memory storage
+  - OTLP receiver enabled
+- **OpenTelemetry Collector** - Telemetry data collection
+  - Receives: OTLP, Jaeger, Zipkin protocols
+  - Exports: Traces to Jaeger
+
+### Tracing Endpoints
+| Protocol | Service Endpoint |
+|----------|------------------|
+| OTLP gRPC | `opentelemetry-collector.observability:4317` |
+| OTLP HTTP | `opentelemetry-collector.observability:4318` |
+| Jaeger gRPC | `opentelemetry-collector.observability:14250` |
+| Jaeger Thrift | `opentelemetry-collector.observability:14268` |
+| Zipkin | `opentelemetry-collector.observability:9411` |
+
 ### Policy & Security
 - **OPA Gatekeeper** - Admission controller for policy enforcement
   - Constraint Templates for reusable policies
   - Audit mode for compliance checking
   - Mutation support enabled
 - **Gatekeeper Policy Manager** - Web UI for policy visualization
-  - View constraint templates
-  - Monitor violations
-  - Audit cluster compliance
 
 ### Constraint Templates Installed
 | Template | Purpose |
@@ -112,6 +131,7 @@ k8sfluxops/
 - **Grafana** - Metrics visualization with Google Cloud Monitoring datasource
 - **Hubble UI** - Network flow visualization for Dataplane V2 (Cilium)
 - **Kube-ops-view** - Real-time cluster visualization
+- **Jaeger** - Distributed tracing UI
 
 ### Cost & Resource Management
 - **Kubecost** - Kubernetes cost monitoring and optimization
@@ -179,6 +199,13 @@ Visualize network flows between pods:
 - Protocol breakdown
 - Namespace filtering
 
+### Jaeger UI
+View distributed traces:
+- Service dependency graph
+- Trace timeline and spans
+- Latency analysis
+- Error tracking
+
 ### Gatekeeper Policy Manager
 View admission policies and violations:
 - Constraint Templates
@@ -231,9 +258,27 @@ kubectl get constraints
 
 # Check violations
 kubectl get constraints -o json | jq '.items[].status.violations'
+```
 
-# Audit all resources
-kubectl get k8srequiredlabels -o yaml
+## 📡 Instrumenting Apps for Tracing
+
+To send traces to the OpenTelemetry Collector, set the environment variable:
+
+```yaml
+env:
+  - name: OTEL_EXPORTER_OTLP_ENDPOINT
+    value: "http://opentelemetry-collector.observability:4317"
+  - name: OTEL_SERVICE_NAME
+    value: "my-service"
+```
+
+For Jaeger native instrumentation:
+```yaml
+env:
+  - name: JAEGER_AGENT_HOST
+    value: "opentelemetry-collector.observability"
+  - name: JAEGER_AGENT_PORT
+    value: "6831"
 ```
 
 ## 📄 License
