@@ -43,7 +43,3 @@ spec:
     
     query:
       enabled: false
-    
-    # UI service
-    query:
-      enabled: false
