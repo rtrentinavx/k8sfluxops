@@ -18,15 +18,10 @@ spec:
       serviceAccountName: velero-server
       containers:
         - name: velero-dashboard
-          image: ghcr.io/reclaim-the-stack/velero-dashboard:latest
+          image: siderolabs/velero-ui:v0.2.0
           ports:
-            - containerPort: 3000
+            - containerPort: 8080
               name: http
-          env:
-            - name: VELERO_NAMESPACE
-              value: "velero"
-            - name: SECRET_KEY_BASE
-              value: "supersecretkey123456789012345678901234567890"
           resources:
             requests:
               cpu: 50m
@@ -46,7 +41,7 @@ spec:
   type: LoadBalancer
   ports:
     - port: 80
-      targetPort: 3000
+      targetPort: 8080
       name: http
   selector:
     app: velero-dashboard
