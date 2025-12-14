@@ -1,0 +1,9 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - namespace.yaml
+  - helm-repository.yaml
+  - jaeger-release.yaml
+  - otel-collector-release.yaml
+  - jaeger-ui-service.yaml
