@@ -30,6 +30,13 @@ spec:
     adminUser: admin
     adminPassword: admin123
     
+    # Service Account for Workload Identity
+    serviceAccount:
+      create: true
+      name: grafana
+      annotations:
+        iam.gke.io/gcp-service-account: grafana@rtrentin-01.iam.gserviceaccount.com
+    
     # Persistence
     persistence:
       enabled: true
@@ -41,16 +48,24 @@ spec:
       port: 80
       targetPort: 3000
     
-    # Data sources - GKE Managed Prometheus
+    # Data sources - Google Cloud Monitoring (Stackdriver)
     datasources:
       datasources.yaml:
         apiVersion: 1
         datasources:
-          - name: Prometheus
-            type: prometheus
-            url: http://prometheus-operated.gmp-system.svc:9090
+          - name: Google Cloud Monitoring
+            type: stackdriver
             access: proxy
             isDefault: true
+            editable: true
+            jsonData:
+              authenticationType: gce
+              defaultProject: rtrentin-01
+          - name: Kubecost Prometheus
+            type: prometheus
+            url: http://kubecost-prometheus-server.kubecost.svc:80
+            access: proxy
+            isDefault: false
             editable: true
     
     # Grafana plugins
@@ -67,7 +82,7 @@ spec:
         cpu: 100m
         memory: 256Mi
     
-    # Disable sidecars temporarily
+    # Disable sidecars
     sidecar:
       dashboards:
         enabled: false
