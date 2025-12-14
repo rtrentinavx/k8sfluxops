@@ -1,0 +1,84 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: velero
+  namespace: velero
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: velero
+      sourceRef:
+        kind: HelmRepository
+        name: vmware-tanzu
+        namespace: flux-system
+      interval: 1h
+  
+  install:
+    crds: Create
+    remediation:
+      retries: 3
+  
+  upgrade:
+    crds: CreateReplace
+    remediation:
+      retries: 3
+  
+  values:
+    # Use GCP plugin
+    initContainers:
+      - name: velero-plugin-for-gcp
+        image: velero/velero-plugin-for-gcp:v1.10.0
+        imagePullPolicy: IfNotPresent
+        volumeMounts:
+          - mountPath: /target
+            name: plugins
+    
+    # GCP configuration
+    configuration:
+      backupStorageLocation:
+        - name: default
+          provider: gcp
+          bucket: velero-backups-rtrentin-01
+          config:
+            serviceAccount: velero@rtrentin-01.iam.gserviceaccount.com
+      
+      volumeSnapshotLocation:
+        - name: default
+          provider: gcp
+          config:
+            project: rtrentin-01
+    
+    # Workload Identity
+    serviceAccount:
+      server:
+        name: velero-server
+        annotations:
+          iam.gke.io/gcp-service-account: velero@rtrentin-01.iam.gserviceaccount.com
+    
+    # No credentials file needed with Workload Identity
+    credentials:
+      useSecret: false
+    
+    # Schedule default backups
+    schedules:
+      daily-backup:
+        disabled: false
+        schedule: "0 2 * * *"
+        useOwnerReferencesInBackup: false
+        template:
+          ttl: "168h"
+          includedNamespaces:
+            - online-boutique
+            - cattle-system
+          excludedResources:
+            - events
+    
+    # Resources - run on default nodes (no tolerations)
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
