@@ -118,11 +118,11 @@ spec:
             - name: EVENTS_SERVER_PORT
               value: "8090"
             - name: FLOWS_API_ADDR
-              value: "hubble-relay.gke-managed-dpv2-observability.svc:443"
+              value: "hubble-relay.gke-managed-dpv2-observability.svc.cluster.local:443"
             - name: TLS_TO_RELAY_ENABLED
               value: "true"
             - name: TLS_RELAY_SERVER_NAME
-              value: "hubble-relay.gke-managed-dpv2-observability.svc"
+              value: "hubble-relay.gke-managed-dpv2-observability.svc.cluster.local"
             - name: TLS_RELAY_CA_CERT_FILES
               value: "/var/run/hubble-tls/ca.crt"
             - name: TLS_RELAY_CLIENT_CERT_FILE
