@@ -8,6 +8,7 @@ spec:
   chart:
     spec:
       chart: cost-analyzer
+      version: "2.3.5"
       sourceRef:
         kind: HelmRepository
         name: kubecost
@@ -23,16 +24,12 @@ spec:
       retries: 3
   
   values:
-    # Cluster identification
-    global:
-      clusterId: "gke-us-east1-71ce"
-    
     # Expose via LoadBalancer for easy access
+    kubecostProductConfigs:
+      clusterName: "gke-us-east1-71ce"
+    
     service:
       type: LoadBalancer
-    
-    # Basic configuration
-    kubecostToken: ""
     
     # Prometheus configuration (use built-in)
     prometheus:
