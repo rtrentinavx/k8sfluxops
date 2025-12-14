@@ -3,4 +3,4 @@ kind: Kustomization
 
 # Deploy infrastructure (Rancher, operators, etc.)
 resources:
-  - ../../infrastructure/kustomization.yaml
+  - ../../infrastructure
