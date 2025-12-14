@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: velero-ui
+  namespace: velero
+  labels:
+    app: velero-ui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: velero-ui
+  template:
+    metadata:
+      labels:
+        app: velero-ui
+    spec:
+      serviceAccountName: velero-server
+      containers:
+        - name: velero-ui
+          image: otwld/velero-ui:latest
+          ports:
+            - containerPort: 3000
+              name: http
+          env:
+            - name: VELERO_NAMESPACE
+              value: "velero"
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: velero-ui
+  namespace: velero
+  labels:
+    app: velero-ui
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 80
+      targetPort: 3000
+      name: http
+  selector:
+    app: velero-ui
