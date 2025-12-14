@@ -8,3 +8,4 @@ resources:
   - online-boutique
   - velero
   - grafana
+  - hubble
