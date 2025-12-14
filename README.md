@@ -55,7 +55,7 @@ k8sfluxops/
     ├── kube-ops-view/       # Cluster visualization
     ├── kubecost/            # Cost monitoring
     ├── nginx/               # Nginx behind Traefik
-    ├── online-boutique/     # Demo microservices app
+    ├── online-boutique/     # Demo microservices app (with OTel tracing)
     ├── rancher/             # Cluster management
     ├── traefik/             # Ingress controller
     └── velero/              # Backup & restore
@@ -65,7 +65,8 @@ k8sfluxops/
 
 | Service | URL | Credentials | Purpose |
 |---------|-----|-------------|---------|
-| Online Boutique | http://34.148.235.24 | - | Demo microservices app |
+| **Online Boutique** | http://34.148.235.24 | - | Demo microservices app (direct) |
+| **Online Boutique (Traefik)** | http://34.73.190.38/boutique/ | - | Demo microservices app (via Traefik) |
 | Kube-ops-view | http://34.75.230.182 | - | Real-time cluster visualization |
 | Kubecost | http://35.227.52.192:9003 | - | Cost monitoring & optimization |
 | Rancher | https://34.73.101.111 | admin / zj10pDIkbFdWumntJqqy | Multi-cluster management |
@@ -94,6 +95,7 @@ k8sfluxops/
   - HTTP/HTTPS entry points
   - IngressRoute CRD support
   - Kubernetes Ingress support
+  - Routes: `/` → Nginx, `/boutique/` → Online Boutique
 
 ### Distributed Tracing
 - **Jaeger** - Distributed tracing backend and UI
@@ -102,6 +104,8 @@ k8sfluxops/
 - **OpenTelemetry Collector** - Telemetry data collection
   - Receives: OTLP, Jaeger, Zipkin protocols
   - Exports: Traces to Jaeger
+- **Online Boutique** - Instrumented with OpenTelemetry
+  - All services configured to send traces via OTLP
 
 ### Tracing Endpoints
 | Protocol | Service Endpoint |
@@ -147,7 +151,7 @@ k8sfluxops/
 - **Weave GitOps** - Flux CD dashboard
 
 ### Demo Applications
-- **Online Boutique** - Google's microservices demo (10 services)
+- **Online Boutique** - Google's microservices demo (10 services) with OTel tracing
 - **Nginx** - Simple web server behind Traefik (with HPA)
 
 ## 🔧 Prerequisites
