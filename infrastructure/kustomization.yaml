@@ -11,3 +11,4 @@ resources:
   - hubble
   - traefik
   - nginx
+  - gatekeeper

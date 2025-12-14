@@ -1,0 +1,57 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: gatekeeper
+  namespace: gatekeeper-system
+spec:
+  interval: 1h
+  chart:
+    spec:
+      chart: gatekeeper
+      version: "3.x"
+      sourceRef:
+        kind: HelmRepository
+        name: gatekeeper
+        namespace: flux-system
+  values:
+    replicas: 2
+    
+    auditInterval: 60
+    auditMatchKindOnly: false
+    auditFromCache: false
+    
+    constraintViolationsLimit: 20
+    
+    # Mutation enabled
+    mutatingWebhookEnabled: true
+    
+    # Emit admission events
+    emitAdmissionEvents: true
+    emitAuditEvents: true
+    
+    # Log level
+    logLevel: INFO
+    
+    # Resources
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 1000m
+        memory: 512Mi
+    
+    audit:
+      resources:
+        requests:
+          cpu: 100m
+          memory: 256Mi
+        limits:
+          cpu: 1000m
+          memory: 512Mi
+    
+    # Exempt namespaces from admission
+    exemptNamespaces:
+      - kube-system
+      - gatekeeper-system
+      - flux-system
