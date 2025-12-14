@@ -9,3 +9,4 @@ resources:
   - velero
   - grafana
   - hubble
+  - traefik
