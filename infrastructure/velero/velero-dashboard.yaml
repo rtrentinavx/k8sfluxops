@@ -18,10 +18,13 @@ spec:
       serviceAccountName: velero-server
       containers:
         - name: velero-dashboard
-          image: siderolabs/velero-ui:v0.2.0
+          image: otwld/velero-ui:latest
           ports:
-            - containerPort: 8080
+            - containerPort: 3000
               name: http
+          env:
+            - name: VELERO_NAMESPACE
+              value: "velero"
           resources:
             requests:
               cpu: 50m
@@ -41,7 +44,7 @@ spec:
   type: LoadBalancer
   ports:
     - port: 80
-      targetPort: 8080
+      targetPort: 3000
       name: http
   selector:
     app: velero-dashboard
