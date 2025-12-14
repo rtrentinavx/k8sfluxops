@@ -1,0 +1,56 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: kubecost
+  namespace: kubecost
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: cost-analyzer
+      sourceRef:
+        kind: HelmRepository
+        name: kubecost
+        namespace: flux-system
+      interval: 1h
+  
+  install:
+    remediation:
+      retries: 3
+  
+  upgrade:
+    remediation:
+      retries: 3
+  
+  values:
+    # Expose via LoadBalancer for easy access
+    service:
+      type: LoadBalancer
+    
+    # Basic configuration
+    kubecostToken: ""
+    
+    # Prometheus configuration (use built-in)
+    prometheus:
+      server:
+        persistentVolume:
+          enabled: false
+    
+    # Resource limits
+    kubecostModel:
+      resources:
+        requests:
+          cpu: 100m
+          memory: 256Mi
+        limits:
+          cpu: 500m
+          memory: 512Mi
+    
+    kubecostFrontend:
+      resources:
+        requests:
+          cpu: 50m
+          memory: 64Mi
+        limits:
+          cpu: 200m
+          memory: 256Mi
