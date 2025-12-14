@@ -1,0 +1,36 @@
+# Traefik IngressRoute to route traffic to nginx
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: nginx
+  namespace: nginx
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: PathPrefix(`/`) || PathPrefix(`/nginx`)
+      kind: Rule
+      services:
+        - name: nginx
+          port: 80
+---
+# Alternative: Standard Kubernetes Ingress (also works with Traefik)
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nginx-ingress
+  namespace: nginx
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+spec:
+  ingressClassName: traefik
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: nginx
+                port:
+                  number: 80
