@@ -23,6 +23,10 @@ spec:
       retries: 3
   
   values:
+    # Cluster identification
+    global:
+      clusterId: "gke-us-east1-71ce"
+    
     # Expose via LoadBalancer for easy access
     service:
       type: LoadBalancer
