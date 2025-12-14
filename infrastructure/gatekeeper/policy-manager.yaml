@@ -65,7 +65,7 @@ spec:
       serviceAccountName: gatekeeper-policy-manager
       containers:
         - name: policy-manager
-          image: sighupio/gatekeeper-policy-manager:v1.0.10
+          image: quay.io/sighup/gatekeeper-policy-manager:v1.0.13
           ports:
             - containerPort: 8080
               name: http
@@ -83,13 +83,13 @@ spec:
             httpGet:
               path: /health
               port: 8080
-            initialDelaySeconds: 5
+            initialDelaySeconds: 10
             periodSeconds: 10
           readinessProbe:
             httpGet:
               path: /health
               port: 8080
-            initialDelaySeconds: 5
+            initialDelaySeconds: 10
             periodSeconds: 10
 ---
 apiVersion: v1
