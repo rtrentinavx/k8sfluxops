@@ -5,3 +5,4 @@ resources:
   - rancher
   - kubecost
   - kube-ops-view
+  - online-boutique

@@ -1,0 +1,32 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: online-boutique
+  namespace: flux-system
+spec:
+  interval: 5m
+  path: ./kustomize
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: online-boutique
+  targetNamespace: online-boutique
+  patches:
+    # Add toleration and nodeSelector to all deployments for spot nodes
+    - patch: |
+        apiVersion: apps/v1
+        kind: Deployment
+        metadata:
+          name: all
+        spec:
+          template:
+            spec:
+              tolerations:
+                - key: "workload"
+                  operator: "Equal"
+                  value: "user"
+                  effect: "NoSchedule"
+              nodeSelector:
+                workload: "user"
+      target:
+        kind: Deployment
