@@ -16,9 +16,15 @@ spec:
         namespace: flux-system
       interval: 1m
   
-  # Wait for HelmRelease to complete before continuing
-  wait: true
-  waitForJobsTimeout: 5m
+  # Install options
+  install:
+    remediation:
+      retries: 3
+  
+  # Upgrade options
+  upgrade:
+    remediation:
+      retries: 3
   
   # Helm values for Rancher
   values:
