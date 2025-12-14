@@ -10,43 +10,18 @@ kind: ClusterRole
 metadata:
   name: hubble-ui
 rules:
-  - apiGroups:
-      - networking.k8s.io
-    resources:
-      - networkpolicies
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups:
-      - ""
-    resources:
-      - componentstatuses
-      - endpoints
-      - namespaces
-      - nodes
-      - pods
-      - services
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups:
-      - apiextensions.k8s.io
-    resources:
-      - customresourcedefinitions
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups:
-      - cilium.io
-    resources:
-      - "*"
-    verbs:
-      - get
-      - list
-      - watch
+  - apiGroups: ["networking.k8s.io"]
+    resources: ["networkpolicies"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["componentstatuses", "endpoints", "namespaces", "nodes", "pods", "services"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["apiextensions.k8s.io"]
+    resources: ["customresourcedefinitions"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["cilium.io"]
+    resources: ["*"]
+    verbs: ["get", "list", "watch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -80,7 +55,6 @@ data:
             proxy_set_header Host $host;
             proxy_set_header X-Real-IP $remote_addr;
 
-            # CORS
             add_header Access-Control-Allow-Methods "GET, POST, PUT, HEAD, DELETE, OPTIONS";
             add_header Access-Control-Allow-Origin *;
             add_header Access-Control-Max-Age 1728000;
@@ -89,12 +63,11 @@ data:
             if ($request_method = OPTIONS) {
                 return 204;
             }
-            # /api/hubble-relay -> hubble-relay:80
             location /api {
                 proxy_http_version 1.1;
                 proxy_pass_request_headers on;
                 proxy_hide_header Access-Control-Allow-Origin;
-                proxy_pass http://127.0.0.1:8080;
+                proxy_pass http://127.0.0.1:8090;
             }
             location / {
                 try_files $uri $uri/ /index.html /index.html;
@@ -151,10 +124,18 @@ spec:
             - name: TLS_RELAY_SERVER_NAME
               value: "hubble-relay.gke-managed-dpv2-observability.svc"
             - name: TLS_RELAY_CA_CERT_FILES
-              value: "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+              value: "/var/run/hubble-tls/ca.crt"
+            - name: TLS_RELAY_CLIENT_CERT_FILE
+              value: "/var/run/hubble-tls/tls.crt"
+            - name: TLS_RELAY_CLIENT_KEY_FILE
+              value: "/var/run/hubble-tls/tls.key"
           ports:
             - name: grpc
               containerPort: 8090
+          volumeMounts:
+            - name: hubble-tls
+              mountPath: /var/run/hubble-tls
+              readOnly: true
           resources:
             limits:
               cpu: 500m
@@ -166,6 +147,9 @@ spec:
         - name: hubble-ui-nginx-conf
           configMap:
             name: hubble-ui-nginx
+        - name: hubble-tls
+          secret:
+            secretName: hubble-relay-client-certs
 ---
 apiVersion: v1
 kind: Service
