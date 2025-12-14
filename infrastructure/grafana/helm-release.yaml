@@ -46,71 +46,17 @@ spec:
       datasources.yaml:
         apiVersion: 1
         datasources:
-          - name: Prometheus (GKE Managed)
+          - name: Prometheus
             type: prometheus
-            url: http://prometheus-operated.gke-gmp-system.svc:9090
+            url: http://prometheus-operated.gmp-system.svc:9090
             access: proxy
             isDefault: true
             editable: true
-          - name: Google Cloud Monitoring
-            type: stackdriver
-            access: proxy
-            jsonData:
-              authenticationType: gce
-            editable: true
-    
-    # Pre-configured dashboards
-    dashboardProviders:
-      dashboardproviders.yaml:
-        apiVersion: 1
-        providers:
-          - name: 'default'
-            orgId: 1
-            folder: ''
-            type: file
-            disableDeletion: false
-            editable: true
-            options:
-              path: /var/lib/grafana/dashboards/default
-          - name: 'kubernetes'
-            orgId: 1
-            folder: 'Kubernetes'
-            type: file
-            disableDeletion: false
-            editable: true
-            options:
-              path: /var/lib/grafana/dashboards/kubernetes
-    
-    # Popular Kubernetes dashboards from Grafana.com
-    dashboards:
-      default:
-        node-exporter:
-          gnetId: 1860
-          revision: 37
-          datasource: Prometheus (GKE Managed)
-      kubernetes:
-        k8s-cluster:
-          gnetId: 7249
-          revision: 1
-          datasource: Prometheus (GKE Managed)
-        k8s-pods:
-          gnetId: 6336
-          revision: 1
-          datasource: Prometheus (GKE Managed)
-        k8s-resources-namespace:
-          gnetId: 13770
-          revision: 1
-          datasource: Prometheus (GKE Managed)
-        k8s-resources-workloads:
-          gnetId: 14205
-          revision: 1
-          datasource: Prometheus (GKE Managed)
     
     # Grafana plugins
     plugins:
       - grafana-piechart-panel
       - grafana-clock-panel
-      - grafana-googlecloud-datasource
     
     # Resources
     resources:
@@ -121,11 +67,9 @@ spec:
         cpu: 100m
         memory: 256Mi
     
-    # Sidecar for dashboard auto-discovery
+    # Disable sidecars temporarily
     sidecar:
       dashboards:
-        enabled: true
-        searchNamespace: ALL
+        enabled: false
       datasources:
-        enabled: true
-        searchNamespace: ALL
+        enabled: false
