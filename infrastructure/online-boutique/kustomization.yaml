@@ -5,3 +5,5 @@ resources:
   - git-repo.yaml
   - kustomization-flux.yaml
   - frontend-lb.yaml
+  - hpa.yaml
+  - vpa.yaml
